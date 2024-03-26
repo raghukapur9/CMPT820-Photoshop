@@ -16,12 +16,12 @@ class MiniPhotoshop:
         self.root.attributes('-fullscreen', True)
         self.root.title("Mini Photoshop CMPT 820")
         l1= Label(root, text="CLICK THE BUTTONS TO PERFORM THE FUNCTIONALITIES MENTIONED",
-           fg="white", bg="purple", width= 98, borderwidth=5, relief="groove",  font =('Verdana', 15))
+           fg="white", bg="blue", width= 98, borderwidth=5, relief="groove",  font =('Arial', 15))
 
         l1.grid(row= 0, column= 1, columnspan= 6, padx=20, pady=20, sticky='nesw')
 
         l2 = Label(root, text="Core Operations",
-           fg="white", bg="purple", width= 10, borderwidth=5, font =('Verdana', 15))
+           fg="white", bg="blue", width= 10, borderwidth=5, font =('Arial', 15))
         l2.grid(row= 1, column= 0, padx=10, pady=10, sticky='nesw')
 
         btn= Button(root, text="OPEN FILE", fg="black", bg="lavender", command=self.open_file)
@@ -43,7 +43,7 @@ class MiniPhotoshop:
         btn5.grid(row= 7, column= 0, padx=10, pady=10, sticky='nesw')
 
         l3 = Label(root, text="Optional Operations",
-           fg="white", bg="purple", width= 10, borderwidth=5, font =('Verdana', 15))
+           fg="white", bg="blue", width= 10, borderwidth=5, font =('Arial', 15))
         l3.grid(row= 8, column= 0, padx=10, pady=10, sticky='nesw')
 
         btn6 = Button(root, text="NEGATIVE IMAGE", fg="black", bg="lavender", command=self.negative)
@@ -113,7 +113,6 @@ class MiniPhotoshop:
     def convert_to_grayscale(self, isPanelA = False):
         if self.panelA and not isPanelA:
             self.display_org_image_PanelA()
-            # gray_image= cv2.cvtColor(self.image, cv2.COLOR_BGR2GRAY)
 
             # Convert the image to a NumPy array for manipulation
             np_image = np.array(self.image)
@@ -272,7 +271,14 @@ class MiniPhotoshop:
             return
         
         self.display_org_image_PanelA()
-        gray_image= cv2.cvtColor(self.image, cv2.COLOR_BGR2GRAY)
+        # Convert the image to a NumPy array for manipulation
+        np_image = np.array(self.image)
+        
+        # Apply the luminosity formula
+        gray_values = 0.299 * np_image[:, :, 0] + 0.587 * np_image[:, :, 1] + 0.114 * np_image[:, :, 2]
+        
+        # Convert back to an integer type
+        gray_image = np.uint8(gray_values)
 
         img_array = np.array(gray_image)
         histogram = Counter(img_array.flatten())
@@ -373,10 +379,19 @@ class MiniPhotoshop:
 
         self.display_org_image_PanelA()
 
-        gray_scale = cv2.cvtColor(self.image, cv2.COLOR_BGR2GRAY)
-        _ , thresh = cv2.threshold(gray_scale, 127, 255, cv2.THRESH_BINARY)
+        # Convert the image to a NumPy array for manipulation
+        np_image = np.array(self.image)
+        
+        # Apply the luminosity formula
+        gray_values = 0.299 * np_image[:, :, 0] + 0.587 * np_image[:, :, 1] + 0.114 * np_image[:, :, 2]
+        
+        # Convert back to an integer type
+        gray_image = np.uint8(gray_values)
 
-        edged = cv2.Canny(thresh, 50, 100)
+        # Apply manual thresholding: Set pixels to max_value if above the threshold, otherwise to 0
+        binary_image = np.where(gray_image > 127, 255, 0).astype(np.uint8)
+
+        edged = cv2.Canny(binary_image, 50, 100)
         edged1 = Image.fromarray(edged)
         
         edged1= ImageTk.PhotoImage(edged1)
