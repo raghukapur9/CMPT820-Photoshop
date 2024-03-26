@@ -2,6 +2,12 @@
 
 Project is built in Python using the Tkinter library for building the GUI, along with libraries such as openCV, PIL, numpy.
 
+## Steps to run the project
+- Clone the project ```git clone https://github.com/raghukapur9/CMPT820-Photoshop.git```
+- Install python and create a virtual enviornment.
+- ```pip3 install -r requirements.txt```
+- ```python3 mini_photoshop.py```
+
 ## Operations included
 
 ### Core Operations
