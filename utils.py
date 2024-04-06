@@ -4,23 +4,29 @@ import numpy as np
 
 def parse_bmp(filename):
     with open(filename, 'rb') as f:
+
         file_header = f.read(14)
         file_type, file_size, _, _ , data_offset = struct.unpack('<2sI2HI', file_header)
+
         if file_type != b'BM':
             raise ValueError('File is not a valid BMP file')
 
         info_header = f.read(40)
         _, width, height, _, bits_per_pixel, compression, image_size, _, _, _, _ = struct.unpack('<IIIHHIIIIII', info_header)
 
-        # Ensure we are dealing with a 24-bit uncompressed BMP
-        if bits_per_pixel != 24 or compression != 0:
-            raise ValueError('Only 24-bit uncompressed BMP files are supported')
+        # Validate the BMP format
+        if bits_per_pixel != 24:
+            raise ValueError('Only 24-bit BMP files are supported')
+        if compression != 0:
+            raise ValueError('Only uncompressed BMP files are supported')
+
+        if image_size == 0:
+            image_size = file_size - data_offset
 
         # Move to the start of the pixel data
         f.seek(data_offset)
 
-        # Read the pixel data
-        image_data = f.read(image_size if image_size > 0 else file_size - data_offset)
+        image_data = f.read(image_size)
 
         return {
             'width': width,
@@ -72,7 +78,6 @@ def invert_image(image):
     return 255 - image
 
 def gaussian_kernel(size, sigma=1.0):
-    """Returns a 2D Gaussian kernel."""
     if sigma <= 0:
         sigma = 1.0
     kernel = np.fromfunction(
@@ -82,10 +87,8 @@ def gaussian_kernel(size, sigma=1.0):
     return kernel / np.sum(kernel)
 
 def gaussian_blur(image, kernel_size, sigma=0):
-    """Applies Gaussian blur to an image."""
     kernel = gaussian_kernel(kernel_size, sigma)
     pad_width = kernel_size // 2
-    # Check if the image is grayscale or color
     if len(image.shape) == 2:  # Grayscale image
         padded_image = np.pad(image, pad_width, mode='edge')
         blurred_image = np.zeros_like(image)
@@ -105,3 +108,21 @@ def gaussian_blur(image, kernel_size, sigma=0):
 def divide_images(image1, image2, scale=255):
     result = (image1 / np.clip(image2, 1, 255)) * scale
     return np.clip(result, 0, 255).astype(np.uint8)
+
+def get_sepia_values(np_image):
+    # Apply a sepia tone
+    tr = 0.393 * np_image[:,:,0] + 0.769 * np_image[:,:,1] + 0.189 * np_image[:,:,2]
+    tg = 0.349 * np_image[:,:,0] + 0.686 * np_image[:,:,1] + 0.168 * np_image[:,:,2]
+    tb = 0.272 * np_image[:,:,0] + 0.534 * np_image[:,:,1] + 0.131 * np_image[:,:,2]
+
+    sepia_image = np.stack([tr, tg, tb], axis=2)
+    
+    return sepia_image
+
+def add_gaussian_noise_to_image(np_image, mean=0, std=25):
+    noise = np.random.normal(mean, std, np_image.shape)
+
+    np_noisy_image = np_image + noise
+
+    np_noisy_image = np.clip(np_noisy_image, 0, 255)
+    return np_noisy_image

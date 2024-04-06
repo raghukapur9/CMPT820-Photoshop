@@ -4,8 +4,8 @@ from PIL import Image, ImageTk
 import numpy as np
 from collections import Counter
 import cv2
-from utlis import parse_bmp, get_grayscale_values, build_huffman_tree, calculate_average_code_length, get_color_component, \
-divide_images, gaussian_blur, invert_image
+from utils import parse_bmp, get_grayscale_values, build_huffman_tree, calculate_average_code_length, get_color_component, \
+divide_images, gaussian_blur, invert_image, get_sepia_values, add_gaussian_noise_to_image
 
 class MiniPhotoshop:
 
@@ -16,74 +16,112 @@ class MiniPhotoshop:
         self.root = root
         self.root.attributes('-fullscreen', True)
         self.root.title("Mini Photoshop CMPT 820")
-        l1= Label(root, text="CLICK THE BUTTONS TO PERFORM THE FUNCTIONALITIES MENTIONED",
-           fg="white", bg="blue", width= 98, borderwidth=5, relief="groove",  font =('Arial', 15))
+        # Label for the submission note
+        submitted_by_label = Label(root, text="Submitted By: Raghu Kapur",
+            fg="black", bg="lightgray", borderwidth=5, font=('Arial', 15))
+        submitted_by_label.grid(row=0, column=0, padx=2, pady=10, sticky='nesw')
 
-        l1.grid(row= 0, column= 1, columnspan= 6, padx=20, pady=20, sticky='nesw')
+        l1= Label(root, text="CLICK THE BUTTONS TO PERFORM THE FUNCTIONALITIES MENTIONED",
+           fg="white", bg="blue", width= 98, borderwidth=5, font =('Arial', 15))
+
+        l1.grid(row= 0, column= 1, columnspan= 6, padx=2, pady=10, sticky='nesw')
 
         l2 = Label(root, text="Core Operations",
-           fg="white", bg="blue", width= 10, borderwidth=5, font =('Arial', 15))
-        l2.grid(row= 1, column= 0, padx=10, pady=10, sticky='nesw')
+           fg="white", bg="blue", borderwidth=5, font =('Arial', 15))
+        l2.grid(row= 1, column= 0, padx=2, pady=10, sticky='nesw')
 
         btn= Button(root, text="OPEN FILE", fg="black", bg="lavender", command=self.open_file)
-        btn.grid(row= 2, column= 0, padx=10, pady=10, sticky='nesw')
+        btn.grid(row= 2, column= 0, padx=2, pady=10, sticky='nesw')
 
         btn1 = Button(root, text="EXIT", fg="black", bg="lavender", command=self.exit_app)
-        btn1.grid(row= 3, column= 0, padx=10, pady=10, sticky='nesw')
+        btn1.grid(row= 3, column= 0, padx=2, pady=10, sticky='nesw')
 
         btn2 = Button(root, text="CONVERT TO GRAYSCALE", fg="black", bg="lavender", command=self.convert_to_grayscale)
-        btn2.grid(row= 4, column= 0, padx=10, pady=10, sticky='nesw')
+        btn2.grid(row= 4, column= 0, padx=2, pady=10, sticky='nesw')
 
         btn3 = Button(root, text="ORDERED DITHERING", fg="black", bg="lavender", command=self.apply_ordered_dithering)
-        btn3.grid(row= 5, column= 0, padx=10, pady=10, sticky='nesw')
+        btn3.grid(row= 5, column= 0, padx=2, pady=10, sticky='nesw')
 
         btn4 = Button(root, text="AUTO LEVEL", fg="black", bg="lavender", command=self.apply_auto_level)
-        btn4.grid(row= 6, column= 0, padx=10, pady=10, sticky='nesw')
+        btn4.grid(row= 6, column= 0, padx=2, pady=10, sticky='nesw')
 
         btn5 = Button(root, text="HUFFMAN CODING", fg="black", bg="lavender", command=self.show_huffman_stats)
-        btn5.grid(row= 7, column= 0, padx=10, pady=10, sticky='nesw')
+        btn5.grid(row= 7, column= 0, padx=2, pady=10, sticky='nesw')
 
         l3 = Label(root, text="Optional Operations",
-           fg="white", bg="blue", width= 10, borderwidth=5, font =('Arial', 15))
-        l3.grid(row= 8, column= 0, padx=10, pady=10, sticky='nesw')
+           fg="white", bg="blue", borderwidth=5, font =('Arial', 15))
+        l3.grid(row= 8, column= 0, padx=2, pady=10, sticky='nesw')
 
         btn6 = Button(root, text="NEGATIVE IMAGE", fg="black", bg="lavender", command=self.negative)
-        btn6.grid(row= 9, column= 0, padx=10, pady=10, sticky='nesw')
+        btn6.grid(row= 9, column= 0, padx=2, pady=10, sticky='nesw')
 
         btn7 = Button(root, text="EXTRACT RED", fg="black", bg="lavender", command=self.extract_red)
-        btn7.grid(row= 10, column= 0, padx=10, pady=10, sticky='nesw')
+        btn7.grid(row= 10, column= 0, padx=2, pady=10, sticky='nesw')
 
         btn8 = Button(root, text="EXTRACT BLUE", fg="black", bg="lavender", command=self.extract_blue)
-        btn8.grid(row=11, column= 0, padx=10, pady=10, sticky='nesw')
+        btn8.grid(row=11, column= 0, padx=2, pady=10, sticky='nesw')
 
         btn9 = Button(root, text="EXTRACT GREEN", fg="black", bg="lavender", command=self.extract_green)
-        btn9.grid(row= 12, column= 0, padx=10, pady=10, sticky='nesw')
+        btn9.grid(row= 12, column= 0, padx=2, pady=10, sticky='nesw')
 
         btn10 = Button(root, text="EDGE DETECTION", fg="black", bg="lavender", command=self.detect_edges)
-        btn10.grid(row= 13, column= 0, padx=10, pady=10, sticky='nesw')
+        btn10.grid(row= 13, column= 0, padx=2, pady=10, sticky='nesw')
 
         btn11 = Button(root, text="PENCIL SKETCH EFFECT", fg="black", bg="lavender", command=self.pencil_sketch_effect)
-        btn11.grid(row= 14, column= 0, padx=10, pady=10, sticky='nesw')
+        btn11.grid(row= 14, column= 0, padx=2, pady=10, sticky='nesw')
 
         btn12 = Button(root, text="COLOR PENCIL SKETCH EFFECT", fg="black", bg="lavender", command=self.color_pencil_sketch_effect)
-        btn12.grid(row= 15, column= 0, padx=10, pady=10, sticky='nesw')
+        btn12.grid(row= 15, column= 0, padx=2, pady=10, sticky='nesw')
 
-        btn14 = Button(root, text="BACKGROUND REMOVAL", fg="black", bg="lavender", command=self.background_removal)
-        btn14.grid(row= 17, column= 0, padx=10, pady=10, sticky='nesw')
+        btn14 = Button(root, text="SEPIA FILTER", fg="black", bg="lavender", command=self.apply_sepia_filter)
+        btn14.grid(row= 17, column= 0, padx=2, pady=10, sticky='nesw')
+
+        btn15 = Button(root, text="GAUSSIAN NOISE", fg="black", bg="lavender", command=self.apply_gaussian_noise)
+        btn15.grid(row= 18, column= 0, padx=2, pady=10, sticky='nesw')
 
     def open_file(self):
-        f_types = [("Bitmap files", "*.bmp")] 
+        f_types = [
+            ("BMP", ".bmp"),
+            ("JPEG", ".jpg"),
+            ("JPEG", ".jpeg"),
+            ("PNG", ".png")
+        ]
+
         path = filedialog.askopenfilename(filetypes=f_types)
 
-        image_data = parse_bmp(path)
+        if not path:
+            return
 
-        # Convert the bytes data to a NumPy array
-        height, width = image_data["height"], image_data["width"]
-        array = np.frombuffer(image_data["data"], dtype=np.uint8).reshape((height, width, 3))
+        array = None
+        if path.lower().endswith('.bmp'):
+            image_data = parse_bmp(path)
 
-        # BMP stores images in BGR order and bottom-up, so you need to convert BGR to RGB and flip vertically
-        array = array[:, :, ::-1]  # Convert BGR to RGB
-        array = np.flipud(array)
+            # Convert the bytes data to a NumPy array
+            image_data = parse_bmp(path)
+
+            # Convert the bytes data to a NumPy array
+            height, width = image_data["height"], image_data["width"]
+            array = np.frombuffer(image_data["data"], dtype=np.uint8).reshape((height, width, 3))
+
+            # BMP stores images in BGR order and bottom-up
+            array = array[:, :, ::-1]
+            array = np.flipud(array)
+        else:
+            image = Image.open(path)
+            original_width, original_height = image.size
+
+            max_width = 484
+            max_height = 300
+
+            ratio = min(max_width / original_width, max_height / original_height)
+
+            new_width = int(original_width * ratio)
+            new_height = int(original_height * ratio)
+            image = image.resize((new_width, new_height), Image.Resampling.LANCZOS)
+            array = np.array(image)
+
+        if hasattr(self, 'panelA') and self.panelA is not None:
+            self.panelA.config(image='')
 
         self.image = array
         image1 = Image.fromarray(self.image)
@@ -97,10 +135,13 @@ class MiniPhotoshop:
             column=1,
             rowspan= 13,
             columnspan= 3,
-            padx=20,
-            pady=20
+            padx=2,
+            pady=10
         )
-        self.panelB = None
+
+        if hasattr(self, 'panelB') and self.panelB is not None:
+            self.panelB.config(image='')
+
         return self.image
 
     def display_org_image_PanelA(self):
@@ -113,11 +154,17 @@ class MiniPhotoshop:
             column=1,
             rowspan= 13,
             columnspan= 3,
-            padx=20,
-            pady=20
+            padx=2,
+            pady=10
         )
 
     def convert_to_grayscale(self, isPanelA = False):
+        if hasattr(self, 'panelA') and self.panelA is not None:
+            self.panelA.config(image='')
+
+        if hasattr(self, 'panelB') and self.panelB is not None:
+            self.panelB.config(image='')
+
         if self.panelA and not isPanelA:
             self.display_org_image_PanelA()
 
@@ -126,7 +173,7 @@ class MiniPhotoshop:
             
             # Apply the luminosity formula
             gray_values = get_grayscale_values(np_image)
-            
+
             # Convert back to an integer type
             gray_image = np.uint8(gray_values)
 
@@ -134,33 +181,32 @@ class MiniPhotoshop:
             
             gray_image = ImageTk.PhotoImage(gray_image)
             
-            self.panelB = Label(image=gray_image, borderwidth=5, relief="sunken")
+            self.panelB = Label(image=gray_image, borderwidth=5)
             self.panelB.image = gray_image
-            self.panelB.grid(row= 1, column=4 , rowspan= 13,columnspan= 3, padx=20, pady=20)
+            self.panelB.grid(row= 1, column=4 , rowspan= 13,columnspan= 3, padx=2, pady=10)
             
             return gray_image
         elif isPanelA:
-            # Convert the image to a NumPy array for manipulation
             np_image = np.array(self.image)
             
             # Apply the luminosity formula
             gray_values = get_grayscale_values(np_image)
-            
+
             # Convert back to an integer type
             gray_image = np.uint8(gray_values)
             gray_image= Image.fromarray(gray_image)
             
             gray_image = ImageTk.PhotoImage(gray_image)
             
-            self.panelA = Label(image=gray_image, borderwidth=5, relief="sunken")
+            self.panelA = Label(image=gray_image, borderwidth=5)
             self.panelA.image = gray_image
             self.panelA.grid(
                 row= 1,
                 column=1,
                 rowspan= 13,
                 columnspan= 3,
-                padx=20,
-                pady=20
+                padx=2,
+                pady=10
             )
             
             return gray_image
@@ -172,6 +218,11 @@ class MiniPhotoshop:
             messagebox.showinfo("Information", "No image loaded. Please open an image first.")
             return
 
+        if hasattr(self, 'panelA') and self.panelA is not None:
+            self.panelA.config(image='')
+        if hasattr(self, 'panelB') and self.panelB is not None:
+            self.panelB.config(image='')
+
         gray_image_conv = self.convert_to_grayscale(True)
 
         # Define a 4x4 Bayer matrix
@@ -180,18 +231,17 @@ class MiniPhotoshop:
                                 [3, 11, 1, 9],
                                 [15, 7, 13, 5]]) / 15.0 * 255.0
 
-        # Convert the image to a NumPy array for manipulation
         np_image = np.array(self.image)
 
-        # Apply the luminosity formula
         gray_values = get_grayscale_values(np_image)
-        
+
         # Convert back to an integer type
         gray_image = np.uint8(gray_values)
 
         gray_image= Image.fromarray(gray_image)
-        # Scale the Bayer matrix to the size of the image
-        rows, cols = gray_image.size
+
+        # rows, cols = gray_image.size
+        rows, cols = (np.array(gray_values)).shape
         repeated_matrix = np.tile(bayer_matrix, (rows // 4 + 1, cols // 4 + 1))
         repeated_matrix = repeated_matrix[:rows, :cols]
 
@@ -209,9 +259,9 @@ class MiniPhotoshop:
         dithered_image = Image.fromarray(np.uint8(dithered_img_array))
 
         dithered_image = ImageTk.PhotoImage(dithered_image)
-        self.panelB = Label(image=dithered_image, borderwidth=5, relief="sunken")
+        self.panelB = Label(image=dithered_image, borderwidth=5)
         self.panelB.image = dithered_image
-        self.panelB.grid(row= 1, column=4 , rowspan= 13,columnspan= 3, padx=20, pady=20)
+        self.panelB.grid(row= 1, column=4 , rowspan= 13, pady=10)
 
         return gray_image_conv, dithered_image
 
@@ -219,6 +269,10 @@ class MiniPhotoshop:
         if self.image is None:
             messagebox.showinfo("Information", "No image loaded. Please open an image first.")
             return
+        if hasattr(self, 'panelA') and self.panelA is not None:
+            self.panelA.config(image='')
+        if hasattr(self, 'panelB') and self.panelB is not None:
+            self.panelB.config(image='')
 
         self.display_org_image_PanelA()
         image1 = Image.fromarray(self.image)
@@ -242,16 +296,22 @@ class MiniPhotoshop:
         auto_leveled_image = Image.fromarray(auto_leveled_img)
 
         auto_leveled_image = ImageTk.PhotoImage(auto_leveled_image)
-        self.panelB = Label(image=auto_leveled_image, borderwidth=5, relief="sunken")
+        self.panelB = Label(image=auto_leveled_image, borderwidth=5)
         self.panelB.image = auto_leveled_image
-        self.panelB.grid(row= 1, column=4 , rowspan= 13,columnspan= 3, padx=20, pady=20)
+        self.panelB.grid(row= 1, column=4 , rowspan= 13,columnspan= 3, padx=2, pady=10)
         return auto_leveled_image
 
     def show_huffman_stats(self):
         if self.image is None:
             messagebox.showinfo("Information", "No image loaded. Please open an image first.")
             return
-        
+
+        if hasattr(self, 'panelA') and self.panelA is not None:
+            self.panelA.config(image='')
+
+        if hasattr(self, 'panelB') and self.panelB is not None:
+            self.panelB.config(image='')
+
         self.display_org_image_PanelA()
 
         # Convert the image to a NumPy array for manipulation
@@ -279,15 +339,21 @@ class MiniPhotoshop:
         if self.image is None:
             messagebox.showinfo("Information", "No image loaded. Please open an image first.")
             return
+        if hasattr(self, 'panelA') and self.panelA is not None:
+            self.panelA.config(image='')
+
+        if hasattr(self, 'panelB') and self.panelB is not None:
+            self.panelB.config(image='')
+
         self.display_org_image_PanelA()
 
         neg1= Image.fromarray(255 - self.image)
         
         neg1= ImageTk.PhotoImage(neg1)
         
-        panelB = Label(image=neg1, borderwidth=5, relief="sunken")
-        panelB.image = neg1
-        panelB.grid(row= 1, column=4 , rowspan= 13,columnspan= 3, padx=20, pady=20)
+        self.panelB = Label(image=neg1, borderwidth=5)
+        self.panelB.image = neg1
+        self.panelB.grid(row= 1, column=4 , rowspan= 13,columnspan= 3, padx=2, pady=10)
         
         return 255 - self.image
 
@@ -295,6 +361,11 @@ class MiniPhotoshop:
         if self.image is None:
             messagebox.showinfo("Information", "No image loaded. Please open an image first.")
             return
+        if hasattr(self, 'panelA') and self.panelA is not None:
+            self.panelA.config(image='')
+        if hasattr(self, 'panelB') and self.panelB is not None:
+            self.panelB.config(image='')
+
         self.display_org_image_PanelA()
 
         red = get_color_component(self.image, 0)
@@ -302,9 +373,9 @@ class MiniPhotoshop:
         
         red1= ImageTk.PhotoImage(red1)
         
-        panelB = Label(image=red1, borderwidth=5, relief="sunken")
-        panelB.image = red1
-        panelB.grid(row= 1, column=4 , rowspan= 13,columnspan= 3, padx=20, pady=20)
+        self.panelB = Label(image=red1, borderwidth=5)
+        self.panelB.image = red1
+        self.panelB.grid(row= 1, column=4 , rowspan= 13,columnspan= 3, padx=2, pady=10)
             
         return red
 
@@ -312,6 +383,10 @@ class MiniPhotoshop:
         if self.image is None:
             messagebox.showinfo("Information", "No image loaded. Please open an image first.")
             return
+        if hasattr(self, 'panelA') and self.panelA is not None:
+            self.panelA.config(image='')
+        if hasattr(self, 'panelB') and self.panelB is not None:
+            self.panelB.config(image='')
 
         self.display_org_image_PanelA()
 
@@ -321,9 +396,9 @@ class MiniPhotoshop:
         
         green1= ImageTk.PhotoImage(green1)
         
-        panelB = Label(image=green1, borderwidth=5, relief="sunken")
-        panelB.image = green1
-        panelB.grid(row= 1, column=4 , rowspan= 13,columnspan= 3, padx=20, pady=20)
+        self.panelB = Label(image=green1, borderwidth=5)
+        self.panelB.image = green1
+        self.panelB.grid(row= 1, column=4 , rowspan= 13,columnspan= 3, padx=2, pady=10)
         
         return green
 
@@ -331,6 +406,11 @@ class MiniPhotoshop:
         if self.image is None:
             messagebox.showinfo("Information", "No image loaded. Please open an image first.")
             return
+
+        if hasattr(self, 'panelA') and self.panelA is not None:
+            self.panelA.config(image='')
+        if hasattr(self, 'panelB') and self.panelB is not None:
+            self.panelB.config(image='')
 
         self.display_org_image_PanelA()
 
@@ -340,9 +420,9 @@ class MiniPhotoshop:
         
         blue1= ImageTk.PhotoImage(blue1)
         
-        panelB = Label(image=blue1, borderwidth=5, relief="sunken")
-        panelB.image = blue1
-        panelB.grid(row= 1, column=4 , rowspan= 13,columnspan= 3, padx=20, pady=20)
+        self.panelB = Label(image=blue1, borderwidth=5)
+        self.panelB.image = blue1
+        self.panelB.grid(row= 1, column=4 , rowspan= 13,columnspan= 3, padx=2, pady=10)
             
         return blue
 
@@ -350,6 +430,11 @@ class MiniPhotoshop:
         if self.image is None:
             messagebox.showinfo("Information", "No image loaded. Please open an image first.")
             return
+
+        if hasattr(self, 'panelA') and self.panelA is not None:
+            self.panelA.config(image='')
+        if hasattr(self, 'panelB') and self.panelB is not None:
+            self.panelB.config(image='')
 
         self.display_org_image_PanelA()
 
@@ -370,9 +455,9 @@ class MiniPhotoshop:
         
         edged1= ImageTk.PhotoImage(edged1)
         
-        panelB = Label(image=edged1, borderwidth=5, relief="sunken")
-        panelB.image = edged1
-        panelB.grid(row= 1, column=4 , rowspan= 13,columnspan= 3, padx=20, pady=20)
+        self.panelB = Label(image=edged1, borderwidth=5)
+        self.panelB.image = edged1
+        self.panelB.grid(row= 1, column=4 , rowspan= 13,columnspan= 3, padx=2, pady=10)
         
         return edged
 
@@ -380,6 +465,11 @@ class MiniPhotoshop:
         if self.image is None:
             messagebox.showinfo("Information", "No image loaded. Please open an image first.")
             return
+
+        if hasattr(self, 'panelA') and self.panelA is not None:
+            self.panelA.config(image='')
+        if hasattr(self, 'panelB') and self.panelB is not None:
+            self.panelB.config(image='')
 
         self.display_org_image_PanelA()
 
@@ -399,9 +489,9 @@ class MiniPhotoshop:
         
         new_pencil_image= ImageTk.PhotoImage(new_pencil_image)
         
-        panelB = Label(image=new_pencil_image, borderwidth=5, relief="sunken")
-        panelB.image = new_pencil_image
-        panelB.grid(row= 1, column=4 , rowspan= 13,columnspan= 3, padx=20, pady=20)
+        self.panelB = Label(image=new_pencil_image, borderwidth=5)
+        self.panelB.image = new_pencil_image
+        self.panelB.grid(row= 1, column=4 , rowspan= 13,columnspan= 3, padx=2, pady=10)
 
         return new_pencil_img
 
@@ -409,6 +499,11 @@ class MiniPhotoshop:
         if self.image is None:
             messagebox.showinfo("Information", "No image loaded. Please open an image first.")
             return
+
+        if hasattr(self, 'panelA') and self.panelA is not None:
+            self.panelA.config(image='')
+        if hasattr(self, 'panelB') and self.panelB is not None:
+            self.panelB.config(image='')
 
         self.display_org_image_PanelA()
 
@@ -419,49 +514,67 @@ class MiniPhotoshop:
         
         new_color_pencil_image= ImageTk.PhotoImage(new_color_pencil_image)
         
-        panelB = Label(image=new_color_pencil_image, borderwidth=5, relief="sunken")
-        panelB.image = new_color_pencil_image
-        panelB.grid(row= 1, column=4 , rowspan= 13,columnspan= 3, padx=20, pady=20)
+        self.panelB = Label(image=new_color_pencil_image, borderwidth=5)
+        self.panelB.image = new_color_pencil_image
+        self.panelB.grid(row= 1, column=4 , rowspan= 13,columnspan= 3, padx=2, pady=10)
         
         return new_color_pencil_img
 
-    def background_removal(self):
+    def apply_sepia_filter(self):
         if self.image is None:
             messagebox.showinfo("Information", "No image loaded. Please open an image first.")
             return
 
+        if hasattr(self, 'panelA') and self.panelA is not None:
+            self.panelA.config(image='')
+        if hasattr(self, 'panelB') and self.panelB is not None:
+            self.panelB.config(image='')
+
         self.display_org_image_PanelA()
-        img = np.copy(self.image)
-        if not img.flags['WRITEABLE']:
-            img.setflags(write=1)
 
-        x, y , w, h = cv2.selectROI(img)
-        start = (x, y)
-        end = (x + w, y + h)
-        rect = (x, y , w, h)
-        
-        cv2.rectangle(img, start, end, (0,0,255), 3)
-        mask = np.zeros(img.shape[:2], np.uint8)
-            
-        bgdModel = np.zeros((1, 65), np.float64)
-        fgdModel = np.zeros((1, 65), np.float64)
-        test_image = img.copy()
-        cv2.grabCut(test_image, mask, rect, bgdModel, fgdModel, 100, cv2.GC_INIT_WITH_RECT)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
-            
-        mask1 = np.where((mask == 2) | (mask == 0), 0, 1).astype('uint8')
-        maskimage = test_image * mask1[:, :, np.newaxis]
-        
-        maskimage1 = Image.fromarray(maskimage)
-        
-        maskimage1= ImageTk.PhotoImage(maskimage1)
-        
-        panelB = Label(image=maskimage1, borderwidth=5, relief="sunken")
-        panelB.image = maskimage1
-        panelB.grid(row= 1, column=4 , rowspan= 13,columnspan= 3, padx=20, pady=20)
+        # Convert the image to a NumPy array for manipulation
+        np_image = np.array(self.image)
 
-        return maskimage
+        # Apply sepia tone
+        sepia_image = get_sepia_values(np_image)
+
+        sepia_image = np.clip(sepia_image, 0, 255)
+
+        sepia_image = Image.fromarray(np.uint8(sepia_image))
+        sepia_image = ImageTk.PhotoImage(sepia_image)
+
+        self.panelB = Label(image=sepia_image, borderwidth=5)
+        self.panelB.image = sepia_image
+        self.panelB.grid(row=1, column=4, rowspan=13, columnspan=3, padx=2, pady=10)
+
+        return sepia_image
+
+    def apply_gaussian_noise(self):
+        if self.image is None:
+            messagebox.showinfo("Information", "No image loaded. Please open an image first.")
+            return
+
+        if hasattr(self, 'panelA') and self.panelA is not None:
+            self.panelA.config(image='')
+
+        if hasattr(self, 'panelB') and self.panelB is not None:
+            self.panelB.config(image='')
+
+        self.display_org_image_PanelA()
+
+        np_image = np.array(self.image)
+
+        # Apply Gaussian noise
+        noisy_image_array = add_gaussian_noise_to_image(np_image)
+
+        noisy_image = Image.fromarray(np.uint8(noisy_image_array))
+        noisy_image = ImageTk.PhotoImage(noisy_image)
+
+        self.panelB = Label(image=noisy_image, borderwidth=5)
+        self.panelB.image = noisy_image
+        self.panelB.grid(row=1, column=6, rowspan=13, columnspan=2, padx=(0,20), pady = 20)
+
+        return noisy_image_array
 
     def exit_app(self):
         self.root.quit()
